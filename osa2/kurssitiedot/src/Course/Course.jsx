@@ -1,10 +1,5 @@
- const Header = ({ course }) => {
-    return (
-      <h2>{course.name}</h2>
-    )
-  }
-
-  const Content = ({ course }) => {
+ 
+ const Content = ({ course }) => {
     return (
       <div>
         {course.parts.map(part => (
@@ -37,4 +32,4 @@
     )
   }
 
-export default Course
+  export default Course 
