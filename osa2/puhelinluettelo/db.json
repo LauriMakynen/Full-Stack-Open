@@ -34,36 +34,6 @@
       "id": "3784",
       "name": "Tilli Viitanen",
       "number": "12345"
-    },
-    {
-      "id": "dbbe",
-      "name": "Tilli Viitanen",
-      "number": "12345"
-    },
-    {
-      "id": "a303",
-      "name": "Tilli Viitanen",
-      "number": "12345"
-    },
-    {
-      "id": "9676",
-      "name": "Tilli Viitanen",
-      "number": "12345"
-    },
-    {
-      "id": "a329",
-      "name": "Tilli Viitanen",
-      "number": "12345"
-    },
-    {
-      "id": "9259",
-      "name": "Makkara",
-      "number": "12345"
-    },
-    {
-      "id": "379f",
-      "name": "Makkara",
-      "number": "12345"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
