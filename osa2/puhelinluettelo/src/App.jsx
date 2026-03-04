@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useEffect, useState } from 'react'
+import personService from './services/persons'
 
 const Filter = ({ filter, handleFilterChange }) => (
   <div>
@@ -30,7 +30,7 @@ const PersonForm = ({
 const Persons = ({ persons }) => (
   <div>
     {persons.map(person => (
-      <li key={person.name}>
+      <li key={person.id}>
         {person.name} {person.number}
       </li>
     ))}
@@ -38,38 +38,34 @@ const Persons = ({ persons }) => (
 )
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456' },
-    { name: 'Ada Lovelace', number: '39-44-5323523' },
-    { name: 'Dan Abramov', number: '12-43-234345' },
-    { name: 'Mary Poppendieck', number: '39-23-6423122' },
-  ])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [persons, setPersons] = useState([]) 
+
 
   // Lisää uusi henkilö puhelinluetteloon, jos nimeä ei vielä ole luettelossa. Jos nimi on jo luettelossa, näytä alert-viesti.
-  const addPerson = (event) => {
-    event.preventDefault()
-    const personObject = {
-      name: newName,
-      number: newNumber,
-    }
-    //lisätään käsky, joka lähettää POST-pyynnön palvelimelle, jotta uusi henkilö tallennetaan tietokantaan
-    axios.post('http://localhost:3002/persons', personObject)
-    .then(response =>
-    console.log(response.data))
+ const addPerson = (event) => {
+  event.preventDefault()
 
-    const nameExists = persons.some(person => person.name === newName)
-    if (nameExists) {
-      alert(`${newName} is already added to phonebook`)
-      return
-    }
+  const name = newName.trim()
+  const number = newNumber.trim()
+  if (!name || !number) return
 
-    setPersons(persons.concat(personObject))
+  const nameExists = persons.some(p => p.name === name)
+  if (nameExists) {
+    alert(`${name} is already added to phonebook`)
+    return
+  }
+
+  const personObject = { name, number }
+
+  personService.create(personObject).then(returnedPerson => {
+    setPersons(persons.concat(returnedPerson))
     setNewName('')
     setNewNumber('')
-  }
+  })
+}
 
   const handleNameChange = (event) => setNewName(event.target.value)
   const handleNumberChange = (event) => setNewNumber(event.target.value)
@@ -78,6 +74,14 @@ const App = () => {
   const personsToShow = persons.filter(person =>
     person.name.toLowerCase().includes(filter.toLowerCase())
   )
+
+  useEffect(() => {
+    personService.getAll()
+    .then(initialPersons => {
+      setPersons(initialPersons)
+    })
+  }, [])
+
 
   return (
     <div>
