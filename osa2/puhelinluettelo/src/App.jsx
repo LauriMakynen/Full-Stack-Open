@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import axios from 'axios'
 
 const Filter = ({ filter, handleFilterChange }) => (
   <div>
@@ -47,18 +48,22 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
 
+  // Lisää uusi henkilö puhelinluetteloon, jos nimeä ei vielä ole luettelossa. Jos nimi on jo luettelossa, näytä alert-viesti.
   const addPerson = (event) => {
     event.preventDefault()
+    const personObject = {
+      name: newName,
+      number: newNumber,
+    }
+    //lisätään käsky, joka lähettää POST-pyynnön palvelimelle, jotta uusi henkilö tallennetaan tietokantaan
+    axios.post('http://localhost:3002/persons', personObject)
+    .then(response =>
+    console.log(response.data))
 
     const nameExists = persons.some(person => person.name === newName)
     if (nameExists) {
       alert(`${newName} is already added to phonebook`)
       return
-    }
-
-    const personObject = {
-      name: newName,
-      number: newNumber,
     }
 
     setPersons(persons.concat(personObject))
