@@ -60,6 +60,7 @@ const App = () => {
   if (existingPerson) {
     const ok = window.confirm(`${name} is already added to phonebook. Replace the number?`)
     if (!ok) return
+    
     //Consolin seurantaa varten, jotta näkee milloin numero päivitetään vanhan henkilön tietoihin
     console.log('Updating number for', name)
     const changedPerson = { ...existingPerson, number }
