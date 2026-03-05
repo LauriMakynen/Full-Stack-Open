@@ -48,6 +48,7 @@ const App = () => {
 
 
   // Lisää uusi henkilö puhelinluetteloon, jos nimeä ei vielä ole luettelossa. Jos nimi on jo luettelossa, näytä alert-viesti.
+  //2.15 muutos edelliseen; nyt lisätty nummero korvaa aiemman
  const addPerson = (event) => {
   event.preventDefault()
 
@@ -55,19 +56,29 @@ const App = () => {
   const number = newNumber.trim()
   if (!name || !number) return
 
-  const nameExists = persons.some(p => p.name === name)
-  if (nameExists) {
-    alert(`${name} is already added to phonebook`)
-    return
-  }
-
-  const personObject = { name, number }
-// Tallenna uusi henkilö backend-palvelimelle ja päivitä frontendin tilaa, jotta uusi henkilö näkyy luettelossa.
-  personService.create(personObject).then(returnedPerson => {
-    setPersons(persons.concat(returnedPerson))
-    setNewName('')
-    setNewNumber('')
-  })}
+  const existingPerson = persons.find(p => p.name === name)
+  if (existingPerson) {
+    const ok = window.confirm(`${name} is already added to phonebook. Replace the number?`)
+    if (!ok) return
+    //Consolin seurantaa varten, jotta näkee milloin numero päivitetään vanhan henkilön tietoihin
+    console.log('Updating number for', name)
+    const changedPerson = { ...existingPerson, number }
+    personService.update(existingPerson.id, changedPerson)
+      .then(returnedPerson => {
+        setPersons(persons.map(p => p.id !== existingPerson.id ? p : returnedPerson))
+        setNewName('')
+        setNewNumber('')
+      })
+  } else {
+    const newPerson = { name, number }
+    personService.create(newPerson)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
+        setNewName('')
+        setNewNumber('')
+      })
+  } 
+}
 
 // Poista henkilö puhelinluettelosta. Näytä varmistusdialogi ennen henkilön poistoa.
   const deletePerson = (id, name) => {
