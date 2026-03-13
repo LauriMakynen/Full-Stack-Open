@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import personService from './services/persons'
+import Notification from './components/Notification'  
+import './index.css'
 
 const Filter = ({ filter, handleFilterChange }) => (
   <div>
@@ -45,40 +47,66 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
   const [persons, setPersons] = useState([]) 
+  const [notification, setNotification] = useState(null)
 
-
-  // Lisää uusi henkilö puhelinluetteloon, jos nimeä ei vielä ole luettelossa. Jos nimi on jo luettelossa, näytä alert-viesti.
-  //2.15 muutos edelliseen; nyt lisätty nummero korvaa aiemman
- const addPerson = (event) => {
-  event.preventDefault()
+  // Näytä ilmoitus onnistuneista ja epäonnistuneista toiminnoista. Ilmoitus katoaa 5 sekunnin kuluttua.
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
+  }
+  // Lisää uusi henkilö puhelinluetteloon. Jos henkilö on jo luettelossa, kysy käyttäjältä, haluaako hän päivittää vanhan numeron uudella.
+  const addPerson = (event) => {
+    event.preventDefault()
 
   const name = newName.trim()
   const number = newNumber.trim()
   if (!name || !number) return
 
   const existingPerson = persons.find(p => p.name === name)
-  if (existingPerson) {
-    const ok = window.confirm(`${name} is already added to phonebook. Replace the number?`)
-    if (!ok) return
-    
-    //Consolin seurantaa varten, jotta näkee milloin numero päivitetään vanhan henkilön tietoihin
-    console.log('Updating number for', name)
-    const changedPerson = { ...existingPerson, number }
-    personService.update(existingPerson.id, changedPerson)
-      .then(returnedPerson => {
-        setPersons(persons.map(p => p.id !== existingPerson.id ? p : returnedPerson))
-        setNewName('')
-        setNewNumber('')
-      })
-  } else {
-    const newPerson = { name, number }
-    personService.create(newPerson)
-      .then(returnedPerson => {
-        setPersons(persons.concat(returnedPerson))
-        setNewName('')
-        setNewNumber('')
-      })
-  } 
+  
+    if (existingPerson) {
+      const ok = window.confirm(`${name} is already added to phonebook. Replace the number?`)
+      if (!ok) return
+
+      const changedPerson = { ...existingPerson, number }
+
+      // Päivitä henkilön numero. Jos päivitys onnistuu, näytä onnistumisilmoitus. Jos päivitys epäonnistuu, näytä virheilmoitus ja poista henkilö luettelosta.
+      personService.
+      update(existingPerson.id, changedPerson)
+        .then(returnedPerson => {
+          setPersons(
+          persons.map(p => p.id !== existingPerson.id ? p : returnedPerson
+          )
+        )
+          setNewName('')
+          setNewNumber('')
+          showNotification(`Updated ${returnedPerson.name}'s number`, 'success')
+        })
+
+        .catch(() => {
+          showNotification(`Information of ${existingPerson.name} has already been removed from server`, 'error')
+          setPersons(
+            persons.filter(p => p.id !== existingPerson.id))
+        })
+
+    } 
+    else {
+      const newPerson = { name, number }
+
+      personService
+        .create(newPerson)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewName('')
+          setNewNumber('')
+          showNotification(`Added ${returnedPerson.name}`, 'success')
+        })
+         .catch(() => {
+          showNotification(`Failed to add ${name}. Please try again later.`, 'error')
+         })
+    } 
 }
 
 // Poista henkilö puhelinluettelosta. Näytä varmistusdialogi ennen henkilön poistoa.
@@ -110,11 +138,9 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-
+      <Notification notification={notification} />
       <Filter filter={filter} handleFilterChange={handleFilterChange} />
-
       <h2>add a new</h2>
-
       <PersonForm
         addPerson={addPerson}
         newName={newName}

@@ -2,7 +2,7 @@
   "persons": [
     {
       "name": "Arto Hellas",
-      "number": "12345678",
+      "number": "222222222",
       "id": "1"
     },
     {
@@ -21,19 +21,14 @@
       "id": "4"
     },
     {
-      "id": "c31e",
-      "name": "ss",
-      "number": "12"
+      "id": "8c3d",
+      "name": "Juha Tauriainen",
+      "number": "0000000"
     },
     {
-      "id": "d0cb",
-      "name": "ss",
-      "number": "22"
-    },
-    {
-      "id": "3784",
-      "name": "Tilli Viitanen",
-      "number": "12345"
+      "id": "5083",
+      "name": "Lauri Mäkynen",
+      "number": "000000009"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

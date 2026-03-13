@@ -64,6 +64,26 @@
       "id": "438a",
       "content": "a new note...Jookoo",
       "important": true
+    },
+    {
+      "id": "5b92",
+      "content": "Hyvä päivä olla ,makkara minä",
+      "important": true
+    },
+    {
+      "id": "b6bb",
+      "content": "--------------------------",
+      "important": true
+    },
+    {
+      "id": "76c9",
+      "content": "a new note...",
+      "important": true
+    },
+    {
+      "id": "feb7",
+      "content": "",
+      "important": true
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
