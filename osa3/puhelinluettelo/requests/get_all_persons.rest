@@ -1,0 +1,7 @@
+Post http://localhost:3002/api/persons/
+Content-Type: application/json
+
+ {
+    "name": "Mary Makkara Marylin",
+    "number": "39-23-77766677"
+  }
