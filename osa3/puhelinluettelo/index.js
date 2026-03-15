@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const morgan = require('morgan')
 
+
 let persons = [
   {
     "id": 1,
@@ -33,6 +34,7 @@ morgan.token('post-data', (request) => {
 //Käytetään middelware morgan-kirjastoa HTTP-pyyntöjen lokittamiseen
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-data'))
 app.use(express.json())
+app.use(express.static('dist'))
 
 //Sivun juuriosoitteeseen vastataan tekstillä "Hello World"
 app.get('/', (request, response) => {
@@ -112,6 +114,6 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-const PORT = 3002
+const PORT = process.env.PORT || 3002
 app.listen(PORT)
 console.log(`Server running on port ${PORT}`)
