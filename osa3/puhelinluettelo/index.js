@@ -25,17 +25,14 @@ let persons = [
   }
 ]
 
-//Middleware, joka tulostaa konsoliin HTTP-pyynnön metodin, pyydetyn osoitteen ja pyynnön rungon
-const requestLogger = (request, response, next) => {
-  console.log('Method:', request.method)
-  console.log('Path:  ', request.path) 
-  console.log('Body:  ', request.body)
-  console.log('---')
-  next()
-}
-//Käytetään middlewarea, joka osaa käsitellä JSON-muotoisia HTTP-pyyntöjä
+morgan.token('post-data', (request) => {
+  return request.method === 'POST'
+  ? JSON.stringify(request.body) : ''
+})
+
+//Käytetään middelware morgan-kirjastoa HTTP-pyyntöjen lokittamiseen
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-data'))
 app.use(express.json())
-app.use(morgan('tiny'))
 
 //Sivun juuriosoitteeseen vastataan tekstillä "Hello World"
 app.get('/', (request, response) => {
