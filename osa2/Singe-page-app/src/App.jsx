@@ -5,9 +5,6 @@ import Notification from './components/Notification'
 import Footer from './components/Footer'
 
 
-
-
-
 const App = () => {
   const [notes, setNotes] = useState(null)
   const [newNote, setNewNote] = useState('a new note...')
