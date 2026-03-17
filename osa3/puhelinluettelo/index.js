@@ -50,7 +50,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 //Laajennetaan käsittely HTTP PUT -pyynnöille, jotka päivittävät henkilön tietokannassa id:n perusteella
 app.put('/api/persons/:id', (request, response, next) => {
-  const {name, number} = request.body
+  const { name, number } = request.body
 
   Person.findById(request.params.id)
     .then(person => {
@@ -90,7 +90,7 @@ app.post('/api/persons', (request, response, next) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
-  .catch(error => next(error))
+    .catch(error => next(error))
 })
 
 // Hakee tietoa puhelinluettelosta
