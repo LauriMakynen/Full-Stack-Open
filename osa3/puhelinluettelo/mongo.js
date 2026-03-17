@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+//Tarkistetaan, että komentoriviparametreja on annettu riittävästi. Jos parametreja on vähemmän kuin kolme, tulostetaan ohje ja lopetetaan ohjelma.
 if (process.argv.length < 3) {
   console.log('give password as argument')
   process.exit(1)
@@ -8,7 +8,6 @@ if (process.argv.length < 3) {
 const password = process.argv[2]
 
 const url = `mongodb+srv://Harjoitus1:${password}@cluster1.wc5bnd7.mongodb.net/puhelinluettelo?retryWrites=true&w=majority`
-
 
 
 mongoose.set('strictQuery', false)
@@ -32,7 +31,7 @@ if (process.argv.length === 3) {
     mongoose.connection.close()
   })
 }
-
+//Jos komentoriviparametreja on annettu kolme, luodaan uusi henkilö ja tallennetaan se tietokantaan. Uuden henkilön nimi ja puhelinnumero saadaan komentoriviparametreista.
 if (process.argv.length === 5) {
   const name = process.argv[3]
   const number = process.argv[4]
