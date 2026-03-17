@@ -27,10 +27,16 @@ app.get('/api/persons', (request, response) => {
   })
 })
 //Hakee yksittäisen henkilön tietokannasta id:n perusteella ja palauttaa sen JSON-muodossa
-app.get('/api/persons/:id', (request, response) => {
-  Person.findById(request.params.id).then(person => {
-    response.json(person)
-  })
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
 //Yksittäisen henkilön poistaminen tietokannasta id:n perusteella

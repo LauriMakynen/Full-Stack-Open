@@ -15,9 +15,23 @@ mongoose.connect(url, { family: 4 })
     console.log('error connecting to MongoDB:', error.message)
   })
 
+  //Määritellään personSchema, joka kuvaa henkilön tietorakenteen MongoDB:ssä.
+  //Schema määrittelee, että henkilöllä on name-kenttä, joka on merkkijono ja vaaditaan, sekä number-kenttä, joka on myös merkkijono ja vaaditaan. 
+  //Lisäksi name-kentälle määritellään validointisääntö, joka estää numeroiden käytön nimessä.
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    required: true,
+    minlength: [3, 'name must be at least 3 characters long'],
+    validate: {
+    validator: (value) => !/\d/.test(value),
+    message: 'name cannot contain numbers'
+    }
+  },
+  number: {
+    type: String,
+    required: true,
+  },
 })
 
 //Määritellään toJSON-muunnos, joka muuttaa MongoDB:n _id-kentän id-kentäksi ja poistaa _id- ja __v-kentät JSON-muodossa.

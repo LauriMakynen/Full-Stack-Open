@@ -103,9 +103,9 @@ const App = () => {
           setNewNumber('')
           showNotification(`Added ${returnedPerson.name}`, 'success')
         })
-         .catch(() => {
-          showNotification(`Failed to add ${name}. Please try again later.`, 'error')
-         })
+        .catch(error => {
+          showNotification(error.response.data.error, 'error')
+      })
     } 
 }
 
