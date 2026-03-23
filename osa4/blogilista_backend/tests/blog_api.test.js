@@ -1,18 +1,29 @@
 const { test, describe, beforeEach, after } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
 const supertest = require('supertest')
 
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
 
 const api = supertest(app)
 
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({})
 
-  await Blog.insertMany(helper.initialBlogs)
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'testuser', name: 'Test User', passwordHash })
+  const savedUser = await user.save()
+
+  const blogsWithUser = helper.initialBlogs.map(blog => ({ ...blog, user: savedUser._id }))
+  const savedBlogs = await Blog.insertMany(blogsWithUser)
+
+  savedUser.blogs = savedBlogs.map(blog => blog._id)
+  await savedUser.save()
 })
 //Testaa, että blogit palautetaan JSON-muodossa, että kaikki blogit palautetaan ja että blogeilla on id-kenttä, 
 // joka toimii uniikkina tunnisteena. Testaa myös, että uuden blogin luominen onnistuu, että jos likes-kenttä puuttuu, se saa arvon 0,
@@ -37,6 +48,15 @@ describe('when there are initially some blogs saved', () => {
     assert(blog.id)
     assert.strictEqual(blog._id, undefined)
   })
+
+  test('blog includes creator user information', async () => {
+    const response = await api.get('/api/blogs')
+    const blog = response.body[0]
+
+    assert(blog.user)
+    assert.strictEqual(blog.user.username, 'testuser')
+    assert.strictEqual(blog.user.name, 'Test User')
+  })
 })
 
 describe('addition of a new blog', () => {
@@ -48,11 +68,14 @@ describe('addition of a new blog', () => {
       likes: 7,
     }
 
-    await api
+    const response = await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
+
+    assert(response.body.user)
+    assert.strictEqual(response.body.user.username, 'testuser')
 
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
