@@ -38,27 +38,42 @@ beforeEach(async () => {
 //  ja  blogia ei luoda, jos title tai url puuttuu. Lopuksi testataan, että blogin poisto ja päivitys onnistuvat. Näistä vielä erikseen infot
 describe('when there are initially some blogs saved', () => {
   test('blogs are returned as json', async () => {
+    const token = await getAuthToken()
+
     await api
       .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
-
+  //Testataan, että kaikki blogit palautetaan
   test('all blogs are returned', async () => {
-    const response = await api.get('/api/blogs')
+    const token = await getAuthToken()
+    const response = await api
+      .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
+
     assert.strictEqual(response.body.length, helper.initialBlogs.length)
   })
-
+  //Testataan, että blogeilla on id-kenttä, joka toimii uniikkina tunnisteena.
   test('the unique identifier field is named id', async () => {
-    const response = await api.get('/api/blogs')
+    const token = await getAuthToken()
+    const response = await api
+      .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
+
     const blog = response.body[0]
 
     assert(blog.id)
     assert.strictEqual(blog._id, undefined)
   })
-
+//Testataan, että blogi sisältää luojan käyttäjätiedot
   test('blog includes creator user information', async () => {
-    const response = await api.get('/api/blogs')
+    const token = await getAuthToken()
+    const response = await api
+      .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
+
     const blog = response.body[0]
 
     assert(blog.user)
@@ -172,11 +187,14 @@ describe('addition of a new blog', () => {
 //Testataan, että blogin poisto onnistuu ja että blogi todella poistuu tietokannasta
 describe('deletion of a blog', () => {
   test('succeeds with status code 204 if id is valid', async () => {
+    const token = await getAuthToken()
+    
     const blogsAtStart = await helper.blogsInDb()
     const blogToDelete = blogsAtStart[0]
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -185,10 +203,52 @@ describe('deletion of a blog', () => {
     assert(!ids.includes(blogToDelete.id))
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
   })
+
+  test('fails with status code 401 if token is missing', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+  })
+
+  test('fails with status code 403 if user is not the creator', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+
+    // Luodaan toinen käyttäjä
+    const anotherUserRes = await api
+      .post('/api/users')
+      .send({
+        username: 'anotheruser',
+        name: 'Another User',
+        password: 'salainen',
+      })
+      .expect(201)
+
+    // Kirjaudutaan toisella käyttäjällä ja saadaan token
+    const anotherUserToken = (await api
+      .post('/api/login')
+      .send({ username: 'anotheruser', password: 'salainen' })).body.token
+
+    // Yritetään poistaa blogi väärällä käyttäjällä
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${anotherUserToken}`)
+      .expect(403)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+  })
 })
 //Testataan, että blogin päivitys onnistuu ja että blogin tiedot todella päivittyvät tietokannassa
 describe('updating a blog', () => {
   test('succeeds in updating likes', async () => {
+    const token = await getAuthToken()
     const blogsAtStart = await helper.blogsInDb()
     const blogToUpdate = blogsAtStart[0]
 
@@ -199,6 +259,7 @@ describe('updating a blog', () => {
     //Testataan, että päivitys onnistuu ja että vastaus sisältää päivitetyt tiedot
     const response = await api
       .put(`/api/blogs/${blogToUpdate.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(updatedBlog)
       .expect(200)
       .expect('Content-Type', /application\/json/)
