@@ -1,10 +1,24 @@
-### Tallenna token: klikkaa "Send Request", kopioi vastauksen "token"-arvo alle @token-muuttujaan
+
+### Kirjaudu sisaan ja kopioi vastauksen token alla olevaan muuttujaan
 POST http://localhost:3003/api/login
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
-
   "username": "mutkanen2",
   "password": "salainen2"
+}
+
+### Liita login-vastauksen token ilman Bearer-etuliitetta
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im11dGthbmVuMiIsImlkIjoiNjljMWExOWEwNGUyNTljMWU5ZGJkYmRkIiwiaWF0IjoxNzc0MzcwMzcyLCJleHAiOjE3NzQzNzM5NzJ9.QFjr7bOJ87lXuPIZ4I_-RIs6WJkI05YgSG9XjesIZOU
+
+### Luo uusi blogi tokenilla
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Token auth test",
+  "author": "mutkanen2",
+  "url": "https://example.com/token-auth",
+  "likes": 2
 }
