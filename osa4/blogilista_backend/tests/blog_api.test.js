@@ -11,6 +11,14 @@ const helper = require('./test_helper')
 
 const api = supertest(app)
 
+const getAuthToken = async () => {
+  const response = await api
+    .post('/api/login')
+    .send({ username: 'testuser', password: 'sekret' })
+
+  return response.body.token
+}
+
 beforeEach(async () => {
   await Blog.deleteMany({})
   await User.deleteMany({})
@@ -61,6 +69,8 @@ describe('when there are initially some blogs saved', () => {
 
 describe('addition of a new blog', () => {
   test('succeeds with valid data', async () => {
+    const token = await getAuthToken()
+
     const newBlog = {
       title: 'New test blog',
       author: 'Tester',
@@ -70,6 +80,7 @@ describe('addition of a new blog', () => {
 
     const response = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -85,6 +96,8 @@ describe('addition of a new blog', () => {
   })
   //Testataan, että jos likes-kenttä puuttuu, se saa arvon 0
   test('if likes is missing, it defaults to 0', async () => {
+    const token = await getAuthToken()
+
     const newBlog = {
       title: 'No likes blog',
       author: 'Tester',
@@ -93,6 +106,7 @@ describe('addition of a new blog', () => {
 
     const response = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -101,6 +115,8 @@ describe('addition of a new blog', () => {
   })
     //Testataan, että blogi ei luoda, jos title tai url puuttuu
   test('fails with status code 400 if title is missing', async () => {
+    const token = await getAuthToken()
+
     const newBlog = {
       author: 'Tester',
       url: 'https://missingtitle.com',
@@ -109,6 +125,7 @@ describe('addition of a new blog', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
 
@@ -117,6 +134,8 @@ describe('addition of a new blog', () => {
   })
   //Testataan, että blogi ei luoda, jos title tai url puuttuu
   test('fails with status code 400 if url is missing', async () => {
+    const token = await getAuthToken()
+
     const newBlog = {
       title: 'Missing url',
       author: 'Tester',
@@ -125,8 +144,26 @@ describe('addition of a new blog', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+  })
+
+  test('fails with status code 401 if token is missing', async () => {
+    const newBlog = {
+      title: 'Unauthorized blog',
+      author: 'Tester',
+      url: 'https://unauthorized.com',
+      likes: 1,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
 
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)

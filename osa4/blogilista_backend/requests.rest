@@ -1,9 +1,10 @@
-POST http://localhost:3003/api/users
+### Tallenna token: klikkaa "Send Request", kopioi vastauksen "token"-arvo alle @token-muuttujaan
+POST http://localhost:3003/api/login
 Content-Type: application/json
+Authorization: Bearer <token>
 
 {
-  "username": "mutkanen",
-  "name": "Kari",
-  "password": "Mik",
-  "adult": true
+
+  "username": "mutkanen2",
+  "password": "salainen2"
 }
