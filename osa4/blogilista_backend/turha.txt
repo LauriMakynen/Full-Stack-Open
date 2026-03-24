@@ -1,0 +1,26 @@
+
+Säilön täällä request pyynnöille valmiiksi dataa, jottei tarviste insiproida. 
+
+//Kirjaudutaan sisään ja saadaan token, 
+// joka tarvitaan blogien poistamiseen. Tokenin voimassaolo on 1h, minkä jälkeen se pitää hakea uudestaan.
+POST http://localhost:3003/api/login
+Content-Type: application/json
+
+{
+  "username": "mutkanen2",
+  "password": "salainen2"
+}
+
+//Tähän muuttujaan token, joka saatu edellisestä pyynnöstä
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im11dGthbmVuMiIsImlkIjoiNjljMWExOWEwNGUyNTljMWU5ZGJkYmRkIiwiaWF0IjoxNzc0MzcxMzQ5LCJleHAiOjE3NzQzNzQ5NDl9.1s0P3G_eG8v4TqzoIQFbZlAyb4NtGxDMXUwHbDzQqgc
+//Poisto onnistui!!
+DELETE http://localhost:3003/api/blogs/69c2be570287da6b73806f1a
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Token auth test",
+  "author": "mutkanen2",
+  "url": "https://example.com/token-auth",
+  "likes": 2
+}

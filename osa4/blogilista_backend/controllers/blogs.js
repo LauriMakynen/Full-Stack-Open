@@ -7,6 +7,8 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
+//Toimii GET toiminnolla nyt ilman tokenia, mutta vaatii tokenin POST, DELETE ja PUT pyynnöissä. 24-3-2026
+////Muutettu, jotta saadaan haettua bllogit ilman tokenia
 blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   const body = request.body
   const user = request.user
@@ -35,7 +37,8 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
 
   response.status(201).json(populatedBlog)
 })
-
+//Toimii GET toiminnolla nyt ilman tokenia, mutta vaatii tokenin POST, DELETE ja PUT pyynnöissä. 24-3-2026
+//Muutettu, jotta saadaan haettua bllogit ilman tokenia
 blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
   const blog = await Blog.findById(request.params.id)
 
@@ -51,7 +54,7 @@ blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) =
   response.status(204).end()
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   const { title, author, url, likes } = request.body
 
   const blog = {
