@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
+import BlogForm from './components/BlogForm'
+import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const [notification, setNotification] = useState(null)
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
+  const blogFormRef = useRef()
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type })
@@ -20,12 +21,6 @@ const App = () => {
       setNotification(null)
     }, 5000)
   }
-
-  useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
-  }, [])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -36,6 +31,32 @@ const App = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (!user) {
+      setBlogs([])
+      return
+    }
+
+    blogService
+      .getAll()
+      .then(blogs => {
+        setBlogs(blogs)
+      })
+      .catch((exception) => {
+        const errorMessage = exception.response?.data?.error
+
+        if (errorMessage === 'jwt expired') {
+          window.localStorage.removeItem('loggedBlogappUser')
+          blogService.setToken(null)
+          setUser(null)
+          showNotification('Session expired, please log in again', 'error')
+          return
+        }
+
+        showNotification('Failed to fetch blogs', 'error')
+      })
+  }, [user])
+
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
@@ -45,7 +66,7 @@ const App = () => {
       setUser(loggedUser)
       setUsername('')
       setPassword('')
-    } catch (exception) {
+    } catch{
       showNotification('Wrong username or password', 'error')
     }
   }
@@ -56,18 +77,77 @@ const App = () => {
     setUser(null)
   }
 
-  const addBlog = async (event) => {
-    event.preventDefault()
-
+  const addBlog = async ({ title, author, url }) => {
     try {
       const createdBlog = await blogService.create({ title, author, url })
-      setBlogs(blogs.concat(createdBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
+      setBlogs(currentBlogs => currentBlogs.concat(createdBlog))
+      blogFormRef.current.toggleVisibility()
       showNotification(`a new blog ${createdBlog.title} by ${createdBlog.author} added`)
     } catch (exception) {
-      showNotification('Failed to create blog', 'error')
+      const errorMessage = exception.response?.data?.error || 'Failed to create blog'
+      showNotification(errorMessage, 'error')
+    }
+  }
+
+  const addLike = async (blogToLike) => {
+    const blogId = blogToLike.id || blogToLike._id
+    const userId = typeof blogToLike.user === 'object'
+      ? (blogToLike.user.id || blogToLike.user._id)
+      : blogToLike.user
+    const fallbackUserId = user?.id || user?._id
+    const userForUpdate = userId || fallbackUserId
+
+    if (!userForUpdate) {
+      showNotification('Failed to like blog: missing user id', 'error')
+      return
+    }
+
+    const updatedBlog = {
+      user: userForUpdate,
+      likes: blogToLike.likes + 1,
+      author: blogToLike.author,
+      title: blogToLike.title,
+      url: blogToLike.url
+    }
+
+    try {
+      const updatedFromServer = await blogService.update(blogId, updatedBlog)
+      const blogForState = {
+        ...blogToLike,
+        ...updatedFromServer,
+        id: updatedFromServer.id || updatedFromServer._id || blogId,
+        likes: updatedFromServer.likes ?? updatedBlog.likes,
+        user: typeof updatedFromServer.user === 'object' ? updatedFromServer.user : blogToLike.user
+      }
+
+      setBlogs(currentBlogs =>
+        currentBlogs.map(blog =>
+          (blog.id || blog._id) === blogId ? blogForState : blog
+        )
+      )
+    } catch (exception) {
+      const errorMessage = exception.response?.data?.error || 'Failed to like blog'
+      showNotification(errorMessage, 'error')
+    }
+  }
+
+  const removeBlog = async (blogToRemove) => {
+    const blogId = blogToRemove.id || blogToRemove._id
+    const okToRemove = window.confirm(`Remove blog ${blogToRemove.title} by ${blogToRemove.author}`)
+
+    if (!okToRemove) {
+      return
+    }
+
+    try {
+      await blogService.remove(blogId)
+      setBlogs(currentBlogs =>
+        currentBlogs.filter(blog => (blog.id || blog._id) !== blogId)
+      )
+      showNotification(`Removed blog ${blogToRemove.title} by ${blogToRemove.author}`)
+    } catch (exception) {
+      const errorMessage = exception.response?.data?.error || 'Failed to remove blog'
+      showNotification(errorMessage, 'error')
     }
   }
 
@@ -106,37 +186,20 @@ const App = () => {
       <Notification notification={notification} />
       <h2>blogs</h2>
       <p>{user.name} logged in <button onClick={handleLogout}>logout</button></p>
-      <h2>create new</h2>
-      <form onSubmit={addBlog}>
-        <div>
-          title:
-          <input
-            type="text"
-            value={title}
-            onChange={({ target }) => setTitle(target.value)}
+      <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+        <BlogForm createBlog={addBlog} />
+      </Togglable>
+      {[...blogs]
+        .sort((a, b) => b.likes - a.likes)
+        .map(blog =>
+          <Blog
+            key={blog.id || blog._id}
+            blog={blog}
+            addLike={addLike}
+            removeBlog={removeBlog}
+            user={user}
           />
-        </div>
-        <div>
-          author:
-          <input
-            type="text"
-            value={author}
-            onChange={({ target }) => setAuthor(target.value)}
-          />
-        </div>
-        <div>
-          url:
-          <input
-            type="text"
-            value={url}
-            onChange={({ target }) => setUrl(target.value)}
-          />
-        </div>
-        <button type="submit">create</button>
-      </form>
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
-      )}
+        )}
     </div>
   )
 }
