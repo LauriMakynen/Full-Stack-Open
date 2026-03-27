@@ -34,6 +34,7 @@ const Blog = ({ blog, addLike, removeBlog, user }) => {
             likes {blog.likes}
             <button onClick={() => addLike(blog)}>like</button>
           </div>
+          <div>{typeof blog.user === 'object' ? blog.user.name : ''}</div>
           {canRemove && <button onClick={() => removeBlog(blog)}>remove</button>}
         </div>
       )}

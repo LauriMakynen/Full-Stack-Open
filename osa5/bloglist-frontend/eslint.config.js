@@ -10,6 +10,13 @@ export default [
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      files: ['**/*.test.{js,jsx}'],
+      languageOptions: {
+        globals: {
+          ...globals.vitest
+        }
+      },
+
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
